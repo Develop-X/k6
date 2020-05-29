@@ -108,6 +108,7 @@ func (vh *vuHandle) runLoopsIfPossible(runIter func(context.Context, lib.ActiveV
 	executorDone := vh.parentCtx.Done()
 
 	var vu lib.ActiveVU
+	var initVU lib.InitializedVU
 
 mainLoop:
 	for {
@@ -127,6 +128,7 @@ mainLoop:
 			// We're not running, but the executor isn't done yet, so we wait
 			// for either one of those conditions. But before that, clear
 			// the VU reference to ensure we get a fresh one below.
+			vh.returnVU(initVU)
 			vu = nil
 			select {
 			case <-canStartIter:
@@ -151,7 +153,8 @@ mainLoop:
 
 		// Ensure we have an active VU
 		if vu == nil {
-			initVU, err := vh.getVU()
+			var err error
+			initVU, err = vh.getVU()
 			if err != nil {
 				return
 			}
